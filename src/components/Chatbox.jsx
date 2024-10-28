@@ -1,30 +1,89 @@
 // src/components/Chatbox.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { db } from '../firebase';
+import {
+  collection,
+  addDoc,
+  doc,
+  updateDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  Timestamp,
+} from 'firebase/firestore';
 
-const Chatbox = () => {
+const Chatbox = ({ username }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // 添加加载状态
-  const [error, setError] = useState(null); // 添加错误状态
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // 定义组织 ID（请替换为您的实际组织 ID）
-  const OPENAI_ORGANIZATION_ID = 'org-cBsq82V1mIp5gKQpqU5ONEFE';
+  const [chatSessionId, setChatSessionId] = useState(null);
+
+  const navigate = useNavigate();
+
+  const OPENAI_ORGANIZATION_ID = 'org-cBsq82V1mIp5gKQpqU5ONEFE'; // 替换为您的组织 ID
+
+  useEffect(() => {
+    const createChatSession = async () => {
+      try {
+        const docRef = await addDoc(collection(db, 'chatSessions'), {
+          username: username,
+          lastUpdated: Timestamp.now(),
+        });
+        setChatSessionId(docRef.id);
+      } catch (error) {
+        console.error('创建聊天会话时出错：', error);
+        setError('无法创建聊天会话，请稍后重试。');
+      }
+    };
+
+    createChatSession();
+  }, [username]);
+
+  useEffect(() => {
+    if (!chatSessionId) return;
+
+    const q = query(
+      collection(db, 'chatSessions', chatSessionId, 'messages'),
+      orderBy('timestamp')
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const fetchedMessages = [];
+      querySnapshot.forEach((doc) => {
+        const messageData = doc.data();
+        fetchedMessages.push({
+          ...messageData.message,
+          timestamp: messageData.timestamp,
+        });
+      });
+      setMessages(fetchedMessages);
+    });
+
+    return () => unsubscribe();
+  }, [chatSessionId]);
 
   const handleSend = async () => {
     if (!input) return;
 
-    const userMessage = { role: 'user', content: input };
+    const timestamp = Timestamp.now();
+    const userMessage = {
+      role: 'user',
+      content: input,
+      timestamp: timestamp,
+    };
     const newMessages = [...messages, userMessage];
 
     setMessages(newMessages);
     setInput('');
-    setIsLoading(true); // 开始加载
-    setError(null); // 重置错误
+    setIsLoading(true);
+    setError(null);
 
     try {
-      // 添加请求节流，避免请求过多
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // 延迟 1 秒
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
@@ -36,13 +95,35 @@ const Chatbox = () => {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
-            'OpenAI-Organization': OPENAI_ORGANIZATION_ID, // 添加组织 ID
-          },
+            'OpenAI-Organization': OPENAI_ORGANIZATION_ID,
+          }
         }
       );
 
-      const assistantMessage = response.data.choices[0].message;
-      setMessages([...newMessages, assistantMessage]);
+      const assistantMessage = {
+        role: 'assistant',
+        content: response.data.choices[0].message.content,
+        timestamp: Timestamp.now(),
+      };
+      const updatedMessages = [...newMessages, assistantMessage];
+      setMessages(updatedMessages);
+
+      // 更新聊天会话的最后更新时间
+      await updateDoc(doc(db, 'chatSessions', chatSessionId), {
+        lastUpdated: Timestamp.now(),
+      });
+
+      // 将用户消息保存到 Firestore
+      await addDoc(collection(db, 'chatSessions', chatSessionId, 'messages'), {
+        message: userMessage,
+        timestamp: userMessage.timestamp,
+      });
+
+      // 将助手消息保存到 Firestore
+      await addDoc(collection(db, 'chatSessions', chatSessionId, 'messages'), {
+        message: assistantMessage,
+        timestamp: assistantMessage.timestamp,
+      });
     } catch (error) {
       console.error(
         '与 OpenAI API 通信时出错：',
@@ -54,16 +135,23 @@ const Chatbox = () => {
           : '请求失败，请稍后重试。'
       );
     } finally {
-      setIsLoading(false); // 结束加载
+      setIsLoading(false);
     }
+  };
+
+  const viewHistory = () => {
+    navigate('/history');
   };
 
   return (
     <div>
+      <h3>欢迎，{username}</h3>
+      <button onClick={viewHistory}>查看历史记录</button>
       <div className="chatbox">
         {messages.map((msg, index) => (
           <div key={index} className={msg.role}>
             <p>{msg.content}</p>
+            <span>{msg.timestamp.toDate().toLocaleString()}</span>
           </div>
         ))}
         {isLoading && <p>助手正在输入...</p>}
@@ -84,4 +172,3 @@ const Chatbox = () => {
 };
 
 export default Chatbox;
-
