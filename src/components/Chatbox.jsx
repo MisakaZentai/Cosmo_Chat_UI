@@ -1,5 +1,6 @@
 // src/components/Chatbox.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import '../App.css'; // 导入包含所有样式的 App.css
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
@@ -25,7 +26,9 @@ const Chatbox = ({ username }) => {
   const navigate = useNavigate();
 
   const OPENAI_ORGANIZATION_ID = 'org-cBsq82V1mIp5gKQpqU5ONEFE'; // 替换为您的组织 ID
+  const chatboxRef = useRef(null); // 初始化 chatboxRef
 
+  // 创建新的聊天会话
   useEffect(() => {
     const createChatSession = async () => {
       try {
@@ -43,6 +46,7 @@ const Chatbox = ({ username }) => {
     createChatSession();
   }, [username]);
 
+  // 监听聊天消息的更新
   useEffect(() => {
     if (!chatSessionId) return;
 
@@ -66,13 +70,20 @@ const Chatbox = ({ username }) => {
     return () => unsubscribe();
   }, [chatSessionId]);
 
+  // 当消息更新时，自动滚动到底部
+  useEffect(() => {
+    if (chatboxRef.current) {
+      chatboxRef.current.scrollTop = chatboxRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   const handleSend = async () => {
-    if (!input) return;
+    if (!input.trim()) return;
 
     const timestamp = Timestamp.now();
     const userMessage = {
       role: 'user',
-      content: input,
+      content: input.trim(),
       timestamp: timestamp,
     };
     const newMessages = [...messages, userMessage];
@@ -83,20 +94,22 @@ const Chatbox = ({ username }) => {
     setError(null);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      // 与 OpenAI API 通信
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
         {
           model: 'gpt-3.5-turbo',
-          messages: newMessages,
+          messages: newMessages.map((msg) => ({
+            role: msg.role,
+            content: msg.content,
+          })),
         },
         {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
+            Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
             'OpenAI-Organization': OPENAI_ORGANIZATION_ID,
-          }
+          },
         }
       );
 
@@ -114,16 +127,22 @@ const Chatbox = ({ username }) => {
       });
 
       // 将用户消息保存到 Firestore
-      await addDoc(collection(db, 'chatSessions', chatSessionId, 'messages'), {
-        message: userMessage,
-        timestamp: userMessage.timestamp,
-      });
+      await addDoc(
+        collection(db, 'chatSessions', chatSessionId, 'messages'),
+        {
+          message: userMessage,
+          timestamp: userMessage.timestamp,
+        }
+      );
 
       // 将助手消息保存到 Firestore
-      await addDoc(collection(db, 'chatSessions', chatSessionId, 'messages'), {
-        message: assistantMessage,
-        timestamp: assistantMessage.timestamp,
-      });
+      await addDoc(
+        collection(db, 'chatSessions', chatSessionId, 'messages'),
+        {
+          message: assistantMessage,
+          timestamp: assistantMessage.timestamp,
+        }
+      );
     } catch (error) {
       console.error(
         '与 OpenAI API 通信时出错：',
@@ -144,29 +163,51 @@ const Chatbox = ({ username }) => {
   };
 
   return (
-    <div>
+    <div className="chatbox-page">
       <h3>欢迎，{username}</h3>
-      <button onClick={viewHistory}>查看历史记录</button>
-      <div className="chatbox">
-        {messages.map((msg, index) => (
-          <div key={index} className={msg.role}>
-            <p>{msg.content}</p>
-            <span>{msg.timestamp.toDate().toLocaleString()}</span>
-          </div>
-        ))}
-        {isLoading && <p>助手正在输入...</p>}
-        {error && <p className="error">{error}</p>}
-      </div>
-      <input
-        type="text"
-        placeholder="请输入消息..."
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyPress={(e) => (e.key === 'Enter' ? handleSend() : null)}
-      />
-      <button onClick={handleSend} disabled={isLoading}>
-        发送
+      <button className="button" onClick={viewHistory}>
+        查看历史记录
       </button>
+      <div className="chatbox-container">
+        <div className="chatbox" ref={chatboxRef}>
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`message ${
+                msg.role === 'user' ? 'message-user' : 'message-assistant'
+              }`}
+            >
+              <div className="message-content">
+                <p>{msg.content}</p>
+              </div>
+              <span className="message-timestamp">
+                {msg.timestamp.toDate().toLocaleString()}
+              </span>
+            </div>
+          ))}
+          {isLoading && (
+            <div className="message message-assistant">
+              <div className="message-content">
+                <p>助手正在输入...</p>
+              </div>
+            </div>
+          )}
+          {error && <p className="error">{error}</p>}
+        </div>
+        <div className="input-container">
+          <input
+            type="text"
+            className="input-field"
+            placeholder="请输入消息..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => (e.key === 'Enter' ? handleSend() : null)}
+          />
+          <button className="button" onClick={handleSend} disabled={isLoading}>
+            发送
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

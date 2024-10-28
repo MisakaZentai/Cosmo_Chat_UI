@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import '../App.css';
 
 const ChatHistory = ({ username }) => {
   const { chatId } = useParams();
@@ -41,14 +42,21 @@ const ChatHistory = ({ username }) => {
       <h2>聊天记录详情</h2>
       {error && <p className="error">{error}</p>}
       <div className="chatbox">
-        {messages.map((msg, index) => (
-          <div key={index} className={msg.role}>
-            <p>{msg.content}</p>
-            <span>{msg.timestamp.toDate().toLocaleString()}</span>
-          </div>
-        ))}
+  {messages.map((msg, index) => (
+    <div
+      key={index}
+      className={`message ${msg.role === 'user' ? 'message-user' : 'message-assistant'}`}
+    >
+      <div className="message-content">
+        <p>{msg.content}</p>
       </div>
-      <button onClick={() => navigate(-1)}>返回</button>
+      <span className="message-timestamp">
+        {msg.timestamp.toDate().toLocaleString()}
+      </span>
+    </div>
+  ))}
+</div>
+      <button className="button" onClick={() => navigate(-1)}>返回</button>
     </div>
   );
 };

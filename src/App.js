@@ -1,5 +1,6 @@
 // src/App.jsx
 import React, { useState } from 'react';
+import './App.css';
 import { Routes, Route } from 'react-router-dom'; // 导入 Routes 和 Route
 import Chatbox from './components/Chatbox';
 import Login from './components/Login';

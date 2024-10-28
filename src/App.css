@@ -1,68 +1,152 @@
-.App {
-  text-align: center;
+/* App.css */
+
+/* 应用容器 */
+.app-container {
+  width: 428px;
+  height: 926px;
+  margin: 0 auto;
+  position: relative;
+  border: 1px solid #ccc;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* 按钮样式 */
+.button {
+  background-color: #00CDBD;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.button:hover {
+  background-color: #00b3a6;
+}
+
+/* 登录页面样式 */
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.login-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.login-container h2 {
+  margin-bottom: 20px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.login-container input {
+  width: 200px;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  font-size: 16px;
+}
+
+/* 聊天页面样式 */
+.chatbox-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* 聊天容器 */
+.chatbox-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .chatbox {
-  height: 400px;
-  overflow-y: scroll;
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+/* 输入区域 */
+.input-container {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: #f9f9f9;
+}
+
+/* 输入框样式 */
+.input-field {
+  flex: 1;
+  padding: 10px;
+  margin-right: 10px;
   border: 1px solid #ccc;
-  padding: 10px;
+  border-radius: 20px;
+  font-size: 16px;
 }
 
-.user {
-  text-align: right;
-  margin: 10px;
-  color: blue;
+/* 消息容器 */
+.message {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
 }
 
-.assistant {
-  text-align: left;
-  margin: 10px;
-  color: green;
+/* 用户消息 */
+.message-user {
+  align-items: flex-end; /* 右对齐 */
 }
 
-input {
-  width: calc(100% - 100px);
-  padding: 10px;
-  margin: 10px 0;
+/* 助手消息 */
+.message-assistant {
+  align-items: flex-start; /* 左对齐 */
 }
 
-button {
-  padding: 10px;
+/* 对话框样式 */
+.message-content {
+  max-width: 70%;
+  padding: 10px 15px;
+  border-radius: 20px;
+  word-wrap: break-word;
 }
 
+/* 用户的对话框 */
+.message-user .message-content {
+  background-color: #00CDBD; /* 蓝色 */
+  color: white;
+  border-bottom-right-radius: 0; /* 右下角为直角 */
+}
+
+/* 助手的对话框 */
+.message-assistant .message-content {
+  background-color: #f0f0f0; /* 灰色 */
+  color: #000;
+  border-bottom-left-radius: 0; /* 左下角为直角 */
+}
+
+/* 时间戳样式 */
+.message-timestamp {
+  font-size: 12px;
+  color: #888;
+  margin-top: 5px;
+}
+
+.message-user .message-timestamp {
+  align-self: flex-end; /* 右对齐 */
+}
+
+.message-assistant .message-timestamp {
+  align-self: flex-start; /* 左对齐 */
+}
