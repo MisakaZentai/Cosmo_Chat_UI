@@ -14,15 +14,19 @@ const Login = ({ onLogin }) => {
   return (
     <div className="login-page">
       <div className="login-container">
-        <h2>请输入用户名</h2>
+      <img src="/login-image.png" alt="登录图片" className="login-image" />
+        <h2>Welcome!👋</h2>
+        <h3>Receive Career Help from ReX!</h3>
+        <h4>Start a conversation with rex right now!</h4>
+        <h5>please enter your user name</h5>
         <input
           type="text"
-          placeholder="用户名"
+          placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           onKeyPress={(e) => (e.key === 'Enter' ? handleLogin() : null)}
         />
-        <button className="button" onClick={handleLogin}>登录</button>
+        <button className="button" onClick={handleLogin}>login</button>
       </div>
     </div>
   );

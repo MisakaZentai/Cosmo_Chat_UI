@@ -1,23 +1,18 @@
 // src/components/HistoryList.jsx
+
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  getDocs,
-} from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import '../App.css'; // 确保样式已导入
 
 const HistoryList = ({ username }) => {
   const [chatSessions, setChatSessions] = useState([]);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchChatSessions = async () => {
       try {
-        // 获取用户的聊天会话列表
         const q = query(
           collection(db, 'chatSessions'),
           where('username', '==', username),
@@ -26,34 +21,51 @@ const HistoryList = ({ username }) => {
         const querySnapshot = await getDocs(q);
         const sessions = [];
         querySnapshot.forEach((doc) => {
-          sessions.push({ id: doc.id, ...doc.data() });
+          sessions.push({
+            id: doc.id,
+            ...doc.data(),
+          });
         });
         setChatSessions(sessions);
       } catch (error) {
-        console.error('获取聊天会话列表时出错：', error);
-        setError('无法获取聊天会话列表，请稍后重试。');
+        console.error('Error getting list of chat sessions:', error);
       }
     };
 
     fetchChatSessions();
   }, [username]);
 
+  const viewChatHistory = (chatId) => {
+    navigate(`/history/${chatId}`);
+  };
+
   return (
-    <div>
-      <h2>历史聊天记录</h2>
-      {error && <p className="error">{error}</p>}
-      <ul>
+    <div className="history-list">
+      <h2>Chat List</h2>
+      <div className="history-list-container">
         {chatSessions.map((session) => (
-          <li key={session.id}>
-            <Link to={`/history/${session.id}`}>
-              {new Date(session.lastUpdated.toDate()).toLocaleString()}
-            </Link>
-          </li>
+          <div
+            key={session.id}
+            className="history-card"
+            onClick={() => viewChatHistory(session.id)}
+          >
+            <img src="/chat-header.png" alt="聊天图标" className="history-card-icon" />
+            <div className="history-card-content">
+              <p className="history-card-date">
+                {session.lastUpdated.toDate().toLocaleString()}
+              </p>
+              {/* 可以在这里添加更多信息，例如聊天摘要 */}
+            </div>
+          </div>
         ))}
-      </ul>
-      <button onClick={() => window.history.back()}>返回</button>
+      </div>
+      <button className="button" onClick={() => navigate(-1)}>
+        back
+      </button>
     </div>
   );
 };
 
 export default HistoryList;
+
+

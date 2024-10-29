@@ -29,8 +29,8 @@ const ChatHistory = ({ username }) => {
         });
         setMessages(fetchedMessages);
       } catch (error) {
-        console.error('获取聊天记录时出错：', error);
-        setError('无法获取聊天记录，请稍后重试。');
+        console.error('Error getting chat logs:', error);
+        setError('Could not get the chat log, please try again later.');
       }
     };
 
@@ -39,7 +39,7 @@ const ChatHistory = ({ username }) => {
 
   return (
     <div>
-      <h2>聊天记录详情</h2>
+      <h2>Chat log details</h2>
       {error && <p className="error">{error}</p>}
       <div className="chatbox">
   {messages.map((msg, index) => (
@@ -56,7 +56,7 @@ const ChatHistory = ({ username }) => {
     </div>
   ))}
 </div>
-      <button className="button" onClick={() => navigate(-1)}>返回</button>
+      <button className="button" onClick={() => navigate(-1)}>back</button>
     </div>
   );
 };

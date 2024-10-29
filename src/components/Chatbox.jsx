@@ -38,8 +38,8 @@ const Chatbox = ({ username }) => {
         });
         setChatSessionId(docRef.id);
       } catch (error) {
-        console.error('创建聊天会话时出错：', error);
-        setError('无法创建聊天会话，请稍后重试。');
+        console.error('Error while creating a chat session:', error);
+        setError('Could not create a chat session, please try again later.');
       }
     };
 
@@ -145,13 +145,13 @@ const Chatbox = ({ username }) => {
       );
     } catch (error) {
       console.error(
-        '与 OpenAI API 通信时出错：',
+        'Error communicating with the OpenAI API:',
         error.response ? error.response.data : error.message
       );
       setError(
         error.response
           ? error.response.data.error.message
-          : '请求失败，请稍后重试。'
+          : 'Request failed, please try again later.'
       );
     } finally {
       setIsLoading(false);
@@ -164,9 +164,12 @@ const Chatbox = ({ username }) => {
 
   return (
     <div className="chatbox-page">
-      <h3>欢迎，{username}</h3>
+      <h3>REX</h3>
+      <div className="chat-header">
+        <img src="/chat-header.png" alt="聊天顶部图片" className="chat-header-image" />
+      </div>
       <button className="button" onClick={viewHistory}>
-        查看历史记录
+      View History
       </button>
       <div className="chatbox-container">
         <div className="chatbox" ref={chatboxRef}>
@@ -188,7 +191,7 @@ const Chatbox = ({ username }) => {
           {isLoading && (
             <div className="message message-assistant">
               <div className="message-content">
-                <p>助手正在输入...</p>
+                <p>The assistant is typing...</p>
               </div>
             </div>
           )}
@@ -198,13 +201,13 @@ const Chatbox = ({ username }) => {
           <input
             type="text"
             className="input-field"
-            placeholder="请输入消息..."
+            placeholder="Please enter a message..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => (e.key === 'Enter' ? handleSend() : null)}
           />
           <button className="button" onClick={handleSend} disabled={isLoading}>
-            发送
+            send
           </button>
         </div>
       </div>
